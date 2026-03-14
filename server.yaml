@@ -3,10 +3,25 @@
   become: true
   become_user: root 
   become_method: su
-  gather_facts: yes
+  gather_facts: false
   vars_files:
     - general_secrets.yml
     - global_env.yml
+
+  pre_tasks:  # <--- Das hier wird VOR den Rollen ausgeführt
+    - name: Try to connect as paul
+      wait_for_connection:
+        timeout: 5
+      ignore_errors: yes
+      register: paul_connection
+
+    - name: Set remote user to root if paul fails
+      set_fact:
+        ansible_user: "{{ 'paul' if paul_connection is succeeded else 'root' }}"
+
+    - name: Now gather facts properly
+      ansible.builtin.setup:
+  
   roles:
     - geerlingguy.docker
 
@@ -25,7 +40,9 @@
         - wireguard
         - ufw 
         - cifs-utils
+        - cron
         state: present
+    
 
     - name: Copy Wireguard Template
       ansible.builtin.template:
@@ -33,22 +50,15 @@
         dest: /etc/wireguard/wg0.conf
 
 
-    - name: disable ufw rules
-      ansible.builtin.systemd:
-        name: ufw
-        state: stopped
-    
-    - name: update rules
+    - name: update  ufw rules
       ansible.builtin.copy:
         src: files/ufw
         dest: /etc/
 
-    - name: Start ufw
+    - name: Reload UFW via systemd
       ansible.builtin.systemd:
         name: ufw
         state: started
-        enabled: true
-    -
     - name: Start wireguard
       ansible.builtin.systemd:
         name: wg-quick@wg0
@@ -126,9 +136,9 @@
         project_src: /opt/auth
       register: output
 
-    - name: Start auth
+    - name: Start time
       community.docker.docker_compose_v2:
-        project_src: /opt/auth
+        project_src: /opt/time
       register: output
       
     - name: Start crates
