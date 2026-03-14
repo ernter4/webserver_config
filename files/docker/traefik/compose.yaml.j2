@@ -1,0 +1,14 @@
+services:
+  traefik:
+    image: traefik
+    ports:
+      - "80:80"
+      - "443:443"
+    environment: 
+      - CF_DNS_API_TOKEN={{traefik_cloudflare_key}}
+    volumes:
+      - ./traefik.yaml:/etc/traefik/traefik.yaml
+      - ./dynamic.yaml:/etc/traefik/dynamic.yaml
+      - traefik_certs:/letsencrypt
+volumes:
+  traefik_certs:

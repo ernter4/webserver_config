@@ -1,0 +1,137 @@
+- name: My first play
+  hosts: server
+  become: true
+  become_user: root 
+  become_method: su
+  gather_facts: yes
+  vars_files:
+    - general_secrets.yml
+    - global_env.yml
+  roles:
+    - geerlingguy.docker
+
+  tasks:
+
+    - name: Log into ghcr
+      community.docker.docker_login:
+        registry_url: ghcr.io
+        username: ernter4
+        password: "{{github_token}}"
+        reauthorize: true
+        
+    - name:  Install Packages
+      ansible.builtin.apt:
+        name: 
+        - wireguard
+        - ufw 
+        - cifs-utils
+        state: present
+
+    - name: Copy Wireguard Template
+      ansible.builtin.template:
+        src: files/wireguard.conf.j2
+        dest: /etc/wireguard/wg0.conf
+
+
+    - name: disable ufw rules
+      ansible.builtin.systemd:
+        name: ufw
+        state: stopped
+    
+    - name: update rules
+      ansible.builtin.copy:
+        src: files/ufw
+        dest: /etc/
+
+    - name: Start ufw
+      ansible.builtin.systemd:
+        name: ufw
+        state: started
+        enabled: true
+    -
+    - name: Start wireguard
+      ansible.builtin.systemd:
+        name: wg-quick@wg0
+        state: started
+        enabled: true
+
+    - name: Copy smbcrededentials
+      ansible.builtin.template:
+        src: files/.smbcredentials.j2
+        dest: /root/.smbcredentials
+
+    - name: Mount  Backup volume
+      ansible.posix.mount:
+        src: //192.168.0.25/backup/server_backup
+        path: /mnt/backup
+        opts: "rw,credentials=/root/.smbcredentials,file_mode=0600,dir_mode=0700,_netdev,nofail"
+        fstype: cifs
+        state: mounted
+        opts_no_log: true
+    
+
+
+    - name: Erstelle die Verzeichnisstruktur in /opt
+      ansible.builtin.file:
+        path: "/opt/{{ item.path }}"
+        state: directory
+      with_filetree: "files/docker/"
+      when: item.state == 'directory'
+
+    - name: Erstelle Verzeichnisstruktur und rendere Templates
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        # Entfernt das '.j2' am Ende beim Zielpfad
+        dest: "/opt/{{ item.path | regex_replace('\\.j2$', '') }}"
+      # 'with_filetree' scannt den lokalen Ordner rekursiv
+      with_filetree: "files/docker/"
+      when: item.state == 'file'
+    
+    - name: copy Backup script
+      ansible.builtin.copy:
+        src: files/backup.sh
+        dest: /opt/backup.sh
+        owner: root       
+        group: root       
+        mode: '0700'    
+
+    - name: copy Restore_script
+      ansible.builtin.copy:
+        src: files/restore.sh
+        dest: /opt/restore.sh
+        owner: root       
+        group: root       
+        mode: '0700'  
+
+
+    - name: Restore from backup
+      ansible.builtin.shell: "/opt/restore.sh"
+      when: restore | default(false) | bool
+    
+    - name: add backup job
+      ansible.builtin.cron:
+        name: "backup"
+        minute: "0"
+        hour: "2"
+        user: root
+        job: "/opt/backup.sh"
+    
+    - name: Start traefik
+      community.docker.docker_compose_v2:
+        project_src: /opt/traefik
+      register: output
+
+    - name: Start auth
+      community.docker.docker_compose_v2:
+        project_src: /opt/auth
+      register: output
+
+    - name: Start auth
+      community.docker.docker_compose_v2:
+        project_src: /opt/auth
+      register: output
+      
+    - name: Start crates
+      community.docker.docker_compose_v2:
+        project_src: /opt/crates
+      register: output

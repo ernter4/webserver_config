@@ -1,0 +1,27 @@
+services:
+
+  lldap:
+    image: lldap/lldap
+    ports:
+      - "{{ADMIN_PORT}}:17170"
+    volumes:
+    - "./data:/data"
+    environment:
+       LLDAP_JWT_SECRET: "{{LLDAP_JWT_SECRET}}"
+       LLDAP_KEY_SEED: "{{LLDAP_KEY_SEED}}"
+       LLDAP_LDAP_USER_PASS: "{{LLDAP_LDAP_USER_PASS}}"
+       LLDAP_LDAP_BASE_DN: "{{LLDAP_LDAP_BASE_DN}}"
+  
+  authelia:
+    image: 'docker.io/authelia/authelia:latest'
+    ports: 
+      - "{{AUTHELIA_PORT}}:9091"
+    restart: 'unless-stopped'
+    environment:
+       AUTHELIA_STORAGE_ENCRYPTION_KEY: "{{AUTHELIA_STORAGE_ENCRYPTION_KEY}}"
+       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD: "{{AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD}}"
+       AUTHELIA_SESSION_SECRET: "{{AUTHELIA_SESSION_SECRET}}"
+    volumes:
+      - './authelia_config.yml:/config/configuration.yml'
+    depends_on:
+      - lldap

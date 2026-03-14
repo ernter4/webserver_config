@@ -1,0 +1,23 @@
+services:
+  
+  caddy:
+    image: "caddy:latest"
+    restart: "always"
+    ports: 
+      - "{{CRATES_PORT}}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+  
+  crates_backend: 
+    image: ghcr.io/ernter4/crates:latest
+    volumes:
+      - ./data/crates:/app/data
+    restart: "always"
+    user: "1000:1000"
+    environment:
+      CRATES_DATABASE_URL: {{CRATES_DATABASE_URL}}
+      CRATES_DATABASE_FILE: {{CRATES_DATABASE_FILE}}
+
+  crates_frontend:
+    image: ghcr.io/ernter4/crates_web:latest
+    restart: "always"

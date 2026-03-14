@@ -1,0 +1,16 @@
+apex_domain: "lamm-apps.de"
+AUTHELIA_PORT: 9091
+ADMIN_PORT: 17170
+TIME_PORT: 3000
+CRATES_PORT: 4000
+## time 
+TIME_ALLOWED_HOSTS: "127.0.0.1,localhost,*"
+TIME_ALLOWED_SITES: "https://time.{{apex_domain}},https://time-api.{{apex_domain}}"
+TIME_CSRF_COOKIE_DOMAIN: ".{{apex_domain}}"
+
+## LLDAP
+LLDAP_LDAP_BASE_DN: "dc=lamm-harburg,dc=de"
+
+## crates
+CRATES_DATABASE_URL: "sqlite:///./data/crates.db"
+CRATES_DATABASE_FILE: "./data/crates.db"

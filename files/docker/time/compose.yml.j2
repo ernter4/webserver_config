@@ -1,0 +1,29 @@
+services:
+  
+  caddy:
+    image: "caddy:latest"
+    restart: "always"
+    ports: 
+      - "{{TIME_PORT}}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+
+  
+  g1_backend:
+    image: "ghcr.io/ernter4/g1_server:latest"
+    restart: "always"
+    volumes:
+      - ./data:/app/data
+    user: "1000:1000"
+    environment:
+      - SECRET_KEY= {{TIME_SECRET_KEY}}
+      - ALLOWED_HOSTS={{TIME_ALLOWED_HOSTS}}
+      - ALLOWED_SITES={{TIME_ALLOWED_SITES}}
+      - CSRF_COOKIE_DOMAIN={{TIME_CSRF_COOKIE_DOMAIN}}
+
+
+    
+  g1_frontend:
+    image: "ghcr.io/ernter4/g1_frontend:latest"
+    restart: "always"
+  

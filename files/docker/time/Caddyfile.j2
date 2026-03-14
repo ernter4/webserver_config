@@ -1,0 +1,6 @@
+http://time-api.{{apex_domain}} {
+   reverse_proxy time_backend:8080
+}
+http://crates.{{apex_domain}} {
+   reverse_proxy time_frontend_frontend:3000
+}

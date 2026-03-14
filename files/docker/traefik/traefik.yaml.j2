@@ -1,0 +1,25 @@
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      # Automatischer Redirect von HTTP auf HTTPS
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+certificatesResolvers:
+  dns-resolver:
+    acme:
+      email: info@lamm-harburg.de
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      storage: /letsencrypt/acme.json
+      dnsChallenge:
+        provider: cloudflare 
+
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yaml
+    watch: true
+  

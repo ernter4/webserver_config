@@ -1,0 +1,71 @@
+http:
+  routers:
+    authelia-router:
+      rule: "Host(`auth.{{apex_domain}}`)"
+      entryPoints: ["websecure"]
+      service: authelia-service # <--- Hier ist dein Service
+      tls:
+        certResolver: dns-resolver
+    admin-router:
+      rule: "Host(`admin.{{apex_domain}}`)"
+      entryPoints: ["websecure"]
+      middlewares: ["internal-only"]
+      service: admin-service
+      tls:
+        certResolver: dns-resolver
+    time-router:
+      rule: "Host(`time.lamm-apps.de`)||Host(`time-api.lamm-apps.de`)"
+      entryPoints: ["websecure"]
+      middlewares: ["internal-only"]
+      service: time-service
+      tls:
+        certResolver: dns-resolver  
+
+    crates-router:
+      rule: "Host(`crates.{{apex_domain}}`)||Host(`crates-api.{{apex_domain}}`)"
+      entryPoints: ["websecure"]
+      middlewares: ["authelia-forward-auth"]
+      service: crates-service
+      tls:
+        certResolver: dns-resolver  
+
+
+  middlewares:
+    # Der Name der Middleware, den du später beim Router angibst
+    authelia-forward-auth:
+      forwardAuth:
+        # Der Endpunkt für die Authelia Auth-Prüfung
+        address: "http://{{ansible_host}}:{{AUTHELIA_PORT}}/api/authz/forward-auth"
+        trustForwardHeader: true
+        # Diese Header werden von Authelia nach erfolgreichem Login 
+        # an dein Backend (crates_backend) weitergereicht
+        authResponseHeaders:
+          - "Remote-User"
+          - "Remote-Groups"
+          - "Remote-Email"
+          - "Remote-Name" 
+    internal-only:
+      ipAllowList:
+        sourceRange:
+          - "192.168.0.0/24"
+
+  services:
+
+    authelia-service:
+      loadBalancer:
+        servers:
+          - url: "http://{{ansible_host}}:{{AUTHELIA_PORT}}"
+    admin-service:
+      loadBalancer:
+        servers:
+          - url: "http://{{ansible_host}}:{{ADMIN_PORT}}"
+
+    time-service:
+      loadBalancer:
+        servers:
+          - url: "http://{{ansible_host}}:{{TIME_PORT}}"
+
+    crates-service:
+      loadBalancer:
+        servers:
+          - url: "http://{{ansible_host}}:{{CRATES_PORT}}"
