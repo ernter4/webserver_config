@@ -14,3 +14,5 @@ LLDAP_LDAP_BASE_DN: "dc=lamm-harburg,dc=de"
 ## crates
 CRATES_DATABASE_URL: "sqlite:///./data/crates.db"
 CRATES_DATABASE_FILE: "./data/crates.db"
+CRATES_GOOGLE_APPLICATION_CREDENTIALS: "/app/google_key.json"
+CRATES_CORS_ALLOWED_ORIGINS: "https://crates.{{apex_domain}}"

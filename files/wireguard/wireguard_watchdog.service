@@ -1,0 +1,14 @@
+[Unit]
+Description= Wireguard_watchdog
+After=network.target
+
+
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart= /bin/sh /etc/wireguard/wireguard_watchdog.sh
+[Install]
+WantedBy=multi-user.target

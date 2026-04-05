@@ -1,6 +1,9 @@
-http://crates-api.{{apex_domain}} {
-   reverse_proxy crates_backend:8000
-}
 http://crates.{{apex_domain}} {
-   reverse_proxy crates_frontend_frontend:80
+    handle /api* {
+       reverse_proxy crates_backend:8000
+    }
+
+    handle {
+       reverse_proxy crates_frontend:80
+   }
 }

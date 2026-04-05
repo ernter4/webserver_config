@@ -11,12 +11,16 @@ services:
   crates_backend: 
     image: ghcr.io/ernter4/crates:latest
     volumes:
-      - ./data/crates:/app/data
+      - ./data:/app/data
+      - ./google_key.json:/app/google_key.json
     restart: "always"
     user: "1000:1000"
     environment:
+      MPLCONFIGDIR: /tmp/matplotlib_cache
       CRATES_DATABASE_URL: {{CRATES_DATABASE_URL}}
       CRATES_DATABASE_FILE: {{CRATES_DATABASE_FILE}}
+      GOOGLE_APPLICATION_CREDENTIALS: {{CRATES_GOOGLE_APPLICATION_CREDENTIALS}}
+      CRATES_CORS_ALLOWED_ORIGINS: {{CRATES_CORS_ALLOWED_ORIGINS}}
 
   crates_frontend:
     image: ghcr.io/ernter4/crates_web:latest

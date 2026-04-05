@@ -73,9 +73,21 @@
 
     - name: Copy Wireguard Template
       ansible.builtin.template:
-        src: files/wireguard.conf.j2
+        src: files/wireguard/wireguard.conf.j2
         dest: /etc/wireguard/wg0.conf
 
+    - name: Copy Wireguard_watchdog_script
+      ansible.builtin.copy:
+        src: files/wireguard/wireguard_watchdog.sh
+        dest: /etc/wireguard/wireguard_watchdog.sh
+        group: root
+        mode: 770
+        
+
+    - name: Copy Wireguard_watchdog_service
+      ansible.builtin.copy:
+        src: files/wireguard/wireguard_watchdog.service
+        dest: /etc/systemd/system/wireguard_watchdog.service
 
     - name: update  ufw rules
       ansible.builtin.copy:
@@ -86,11 +98,20 @@
       ansible.builtin.systemd:
         name: ufw
         state: started
+
     - name: Start wireguard
       ansible.builtin.systemd:
         name: wg-quick@wg0
         state: started
         enabled: true
+
+    - name: Start Wireguard_watchdog_service
+      ansible.builtin.systemd:
+        name: wireguard_watchdog
+        state: started
+        enabled: true
+        
+
 
     - name: Copy smbcrededentials
       ansible.builtin.template:
@@ -151,7 +172,7 @@
         minute: "0"
         hour: "2"
         user: root
-        job: "/opt/backup.sh"
+        job: "sh /opt/backup.sh"
     
     - name: Start traefik
       community.docker.docker_compose_v2:
