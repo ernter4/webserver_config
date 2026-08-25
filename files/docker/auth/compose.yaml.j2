@@ -1,7 +1,7 @@
 services:
 
   lldap:
-    image: lldap/lldap
+    image: lldap/lldap:0.6.3
     ports:
       - "{{ADMIN_PORT}}:17170"
     volumes:
@@ -13,7 +13,7 @@ services:
        LLDAP_LDAP_BASE_DN: "{{LLDAP_LDAP_BASE_DN}}"
   
   authelia:
-    image: 'docker.io/authelia/authelia:latest'
+    image: 'docker.io/authelia/authelia:v4.39.20'
     ports: 
       - "{{AUTHELIA_PORT}}:9091"
     restart: 'unless-stopped'

@@ -1,0 +1,42 @@
+services:
+  loader:
+    image: "victronenergy/venus-influx-loader:1.7"
+    command: [ "bin/venus-influx-loader", "--enable-discovery-api" ]
+    ports:
+     - "8088:8088"
+    volumes:
+     - "config-storage:/config"
+  browser:
+    image: "victronenergy/venus-influx-loader:1.7"
+    command: [ "bin/venus-upnp-browser", "--discovery-api", "http://localhost:8088/discovery-api/" ]
+    # `network_mode: host` is required for the `venus-upnp-browser` to access your host network
+    # and audo discover Venus devices.
+    network_mode: host
+    environment:
+      - disable-admin-api-auth
+  influxdb:
+    image: "influxdb:1.8"
+    ports:
+     - "8086:8086"
+    volumes:
+     - "influxdb-storage:/var/lib/influxdb"
+    environment:
+     - INFLUXDB_HTTP_LOG_ENABLED=false
+
+  grafana:
+    image: "victronenergy/venus-grafana:1.7"
+    volumes:
+     - "grafana-storage:/var/lib/grafana"
+    ports:
+     - "3000:3000"
+    environment:
+     - VIL_INFLUXDB_URL=http://influxdb:8086
+     - VIL_GRAFANA_API_URL=http://loader:8088/grafana-api
+     # specify URL that should be listed on Welcome dashboard
+     # to acess Venus Influx Loader Admin UI
+     - VIL_PUBLIC_URL=http://localhost:8088/
+
+volumes:
+  influxdb-storage:
+  grafana-storage:
+  config-storage:
