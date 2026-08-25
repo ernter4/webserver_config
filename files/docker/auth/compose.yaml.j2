@@ -13,7 +13,7 @@ services:
        LLDAP_LDAP_BASE_DN: "{{LLDAP_LDAP_BASE_DN}}"
   
   authelia:
-    image: 'docker.io/authelia/authelia:v4.39.20'
+    image: 'docker.io/authelia/authelia:4.39.20'
     ports: 
       - "{{AUTHELIA_PORT}}:9091"
     restart: 'unless-stopped'
